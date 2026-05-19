@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio Professionnel - Data Engineer</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap");
+
+      :root {
+        --bg-deep: #050b14;
+        --bg-panel: rgba(13, 22, 40, 0.6);
+        --accent-primary: #00f0ff; /* Cyan néon */
+        --accent-secondary: #ff0055; /* Rose néon */
+        --accent-tertiary: #7000ff; /* Violet */
+        --text-main: #e2e8f0;
+        --text-muted: #94a3b8;
+        --sidebar-width: 240px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-deep);
+        color: var(--text-main);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* Fond animé de nœuds */
+      #network-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+      }
+
+      /* Sidebar Navigation */
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: rgba(5, 11, 20, 0.8);
+        backdrop-filter: blur(15px);
+        border-right: 1px solid rgba(0, 240, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 40px 0;
+        z-index: 100;
+      }
+
+      .nav-item {
+        position: relative;
+        padding: 15px 40px;
+        list-style: none;
+      }
+
+      .nav-item a {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-family: "Fira Code", monospace;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 0;
+        background: var(--accent-primary);
+        transition:
+          height 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+
+      .nav-item.active::before,
+      .nav-item:hover::before {
+        height: 100%;
+        box-shadow: 0 0 10px var(--accent-primary);
+      }
+
+      .nav-item.active a,
+      .nav-item:hover a {
+        color: #ffffff;
+        text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+      }
+
+      /* Contenu Principal */
+      main {
+        margin-left: var(--sidebar-width);
+        padding: 0 8%;
+      }
+
+      section {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 80px 0;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Typographie */
+      h1 {
+        font-size: 4.5rem;
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 20px;
+        background: linear-gradient(
+          135deg,
+          #ffffff 0%,
+          var(--accent-primary) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
+      }
+
+      h2 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        margin-bottom: 40px;
+        color: #ffffff;
+        position: relative;
+        display: inline-block;
+      }
+
+      h2::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--accent-secondary);
+        box-shadow: 0 0 10px var(--accent-secondary);
+      }
+
+      h3 {
+        font-size: 1.2rem;
+        color: var(--accent-primary);
+        margin-bottom: 15px;
+        font-weight: 500;
+      }
+
+      /* Composants */
+      .glass-card {
+        background: var(--bg-panel);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        transition:
+          transform 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      .glass-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(0, 240, 255, 0.3);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+      }
+
+      .profile-wrapper {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        margin-bottom: 40px;
+      }
+
+      .profile-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        position: relative;
+        z-index: 2;
+        border: 2px solid transparent;
+      }
+
+      .profile-glow {
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border-radius: 50%;
+        background: conic-gradient(
+          var(--accent-primary),
+          var(--accent-tertiary),
+          var(--accent-secondary),
+          var(--accent-primary)
+        );
+        z-index: 1;
+        animation: spin 4s linear infinite;
+      }
+
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        border-radius: 20px;
+        font-family: "Fira Code", monospace;
+        font-size: 0.75rem;
+        color: var(--accent-primary);
+        margin: 0 8px 8px 0;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        background: transparent;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--accent-primary),
+          var(--accent-tertiary)
+        );
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .btn:hover::before {
+        opacity: 1;
+      }
+      .btn:hover {
+        border-color: transparent;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+      }
+
+      .code-text {
+        font-family: "Fira Code", monospace;
+        color: var(--accent-secondary);
+        font-size: 0.9rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 900px) {
+        .sidebar {
+          width: 100%;
+          height: auto;
+          flex-direction: row;
+          padding: 15px;
+          border-right: none;
+          border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+        }
+        ul {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          overflow-x: auto;
+        }
+        .nav-item {
+          padding: 10px 15px;
+        }
+        .nav-item::before {
+          width: 100%;
+          height: 2px;
+          top: auto;
+          bottom: 0;
+          left: 0;
+          transform: none;
+        }
+        .nav-item.active::before,
+        .nav-item:hover::before {
+          height: 2px;
+        }
+        main {
+          margin-left: 0;
+          padding: 100px 5% 50px 5%;
+        }
+        h1 {
+          font-size: 3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="network-canvas"></canvas>
+
+    <aside class="sidebar">
+      <ul>
+        <li class="nav-item active"><a href="#accueil">01. Accueil</a></li>
+        <li class="nav-item"><a href="#apropos">02. Node_Info</a></li>
+        <li class="nav-item"><a href="#experiences">03. Datasets</a></li>
+        <li class="nav-item"><a href="#reflexion">04. Analyse</a></li>
+        <li class="nav-item"><a href="#contact">05. Contacts</a></li>
+      </ul>
+    </aside>
+
+    <main>
+      <section id="accueil">
+        <div class="profile-wrapper">
+          <div class="profile-glow"></div>
+          <img
+            src="votre-photo.jpg"
+            alt="Portrait Tarik"
+            class="profile-img"
+            style="background: var(--bg-deep)"
+          />
+        </div>
+
+        <p class="code-text" style="margin-bottom: 10px">
+          > Initializing user profile...
+        </p>
+        <h1>Tarik Benrabah</h1>
+
+        <p
+          style="
+            font-size: 1.4rem;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            font-weight: 300;
+          "
+        >
+          Etudiant en Base de Données /
+          <span style="color: var(--accent-primary); font-weight: 500"
+            >Futur Data Engineer</span
+          >
+        </p>
+
+        <p
+          style="
+            max-width: 600px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            padding-left: 20px;
+          "
+        >
+          "L'innovation fait la différence entre un leader et un suiveur."<br />
+          <span style="font-size: 0.9rem; color: #fff">— Steve Jobs</span>
+        </p>
+
+        <div>
+          <a href="#contact" class="btn">Établir une connexion</a>
+        </div>
+      </section>
+
+      <section id="apropos">
+        <h2>Node_Info</h2>
+        <div class="glass-card">
+          <div class="grid">
+            <div>
+              <h3>Mon « moi » social</h3>
+              <p style="color: var(--text-muted); margin-bottom: 20px">
+                Détail de mon parcours BUT et de mes valeurs fondamentales. Une
+                approche systémique où chaque donnée compte.
+              </p>
+              <div>
+                <span class="badge">Innovation</span>
+                <span class="badge">Relationnel</span>
+                <span class="badge">Adaptation</span>
+              </div>
+            </div>
+            <div>
+              <h3>Personnalité</h3>
+              <p style="color: var(--text-muted)">
+                Un profil technique ancré dans l'analyse de données, combinant
+                80% de rigueur académique (Data, Algorithmique) et 20%
+                d'exploration personnelle pour résoudre des problèmes complexes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="experiences">
+        <h2>Datasets & Projets</h2>
+        <div class="grid">
+          <div class="glass-card">
+            <h3>Salon de Coiffure</h3>
+            <p class="code-text" style="margin-bottom: 15px">
+              // Modélisation & Web
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.95rem">
+              Création d'un site Internet de prise de rendez-vous. Modélisation
+              et intégration d'une base de données MySQL couplée à une interface
+              utilisateur fluide.
+            </p>
+          </div>
+
+          <div class="glass-card">
+            <h3>Plateforme StudyGo</h3>
+            <p class="code-text" style="margin-bottom: 15px">// BUT2 Project</p>
+            <p style="color: var(--text-muted); font-size: 0.95rem">
+              Développement et réalisation d'une plateforme d'apprentissage
+              collaborative. Gestion de la structure de données et logique
+              métier.
+            </p>
+            <div
+              style="
+                margin-top: 20px;
+                background: rgba(0, 0, 0, 0.3);
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+              "
+            >
+              <img
+                src="Logo_StudyGo.png"
+                alt="Logo StudyGo"
+                style="
+                  max-height: 80px;
+                  object-fit: contain;
+                  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+                "
+              />
+            </div>
+          </div>
+
+          <div
+            class="glass-card"
+            style="border: 1px dashed rgba(0, 240, 255, 0.3)"
+          >
+            <h3>Nouveau Cluster</h3>
+            <p class="code-text" style="margin-bottom: 15px">
+              // En cours d'ingestion
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.95rem">
+              Description de ce nouveau projet, de la technologie utilisée et
+              des compétences acquises lors de sa réalisation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="reflexion">
+        <h2>Analyse d'Exécution</h2>
+        <div class="glass-card">
+          <div class="grid" style="gap: 40px">
+            <div>
+              <p style="color: var(--text-muted)">
+                Mon parcours académique m'a permis de mettre en perspective les
+                compétences attendues par le programme national avec mes
+                réalisations concrètes. Au-delà de la technique, cette formation
+                a renforcé mon autonomie.
+              </p>
+              <p style="margin-top: 15px; color: var(--text-muted)">
+                En analysant le « comment » et le « pourquoi » de chaque
+                difficulté surmontée, j'ai appris à transformer les anomalies
+                (erreurs, bugs) en opportunités d'optimisation.
+              </p>
+            </div>
+            <div style="display: flex; align-items: center">
+              <blockquote
+                style="
+                  font-style: italic;
+                  border-left: 3px solid var(--accent-secondary);
+                  padding-left: 20px;
+                  color: var(--text-main);
+                  font-size: 1.1rem;
+                "
+              >
+                "La maîtrise technique n'est que le point de départ ; la
+                véritable compétence réside dans la capacité à évaluer son
+                propre cheminement pour continuer à progresser."
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact">
+        <h2>Contactez-moi</h2>
+        <div class="glass-card" style="max-width: 600px">
+          <p style="margin-bottom: 30px; color: var(--text-muted)">
+            Ouvert aux opportunités et aux échanges concernant la data,
+            l'ingénierie et le développement.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 20px">
+            <div style="display: flex; align-items: center; gap: 15px">
+              <span
+                style="
+                  color: var(--accent-primary);
+                  font-family: &quot;Fira Code&quot;, monospace;
+                "
+                >[Email]</span
+              >
+              <p>tarik.rami.benrabah@etud.u-picardie.fr</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px">
+              <span
+                style="
+                  color: var(--accent-secondary);
+                  font-family: &quot;Fira Code&quot;, monospace;
+                "
+                >[Phone]</span
+              >
+              <p>+33 7 00 00 00 00</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px">
+              <span
+                style="
+                  color: var(--accent-tertiary);
+                  font-family: &quot;Fira Code&quot;, monospace;
+                "
+                >[Links]</span
+              >
+              <p>
+                <a
+                  href="#"
+                  style="
+                    color: var(--text-main);
+                    text-decoration: none;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                  "
+                  >LinkedIn</a
+                >
+                &nbsp;|&nbsp;
+                <a
+                  href="#"
+                  style="
+                    color: var(--text-main);
+                    text-decoration: none;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                  "
+                  >GitHub</a
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // 1. Gestion de la navigation au scroll
+      const sections = document.querySelectorAll("section");
+      const navItems = document.querySelectorAll(".nav-item");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              navItems.forEach((item) => {
+                item.classList.remove("active");
+                if (
+                  item.querySelector("a").getAttribute("href") ===
+                  `#${entry.target.id}`
+                ) {
+                  item.classList.add("active");
+                }
+              });
+            }
+          });
+        },
+        { threshold: 0.3 },
+      );
+
+      sections.forEach((sec) => observer.observe(sec));
+
+      // 2. Animation Dataviz (Système de particules / Nœuds)
+      const canvas = document.getElementById("network-canvas");
+      const ctx = canvas.getContext("2d");
+      let particlesArray;
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        init();
+      });
+
+      // Classe particule
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 1;
+          this.speedX = Math.random() * 1 - 0.5;
+          this.speedY = Math.random() * 1 - 0.5;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+
+          if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(0, 240, 255, 0.5)";
+          ctx.fill();
+        }
+      }
+
+      function init() {
+        particlesArray = [];
+        let numberOfParticles = (canvas.height * canvas.width) / 12000;
+        for (let i = 0; i < numberOfParticles; i++) {
+          particlesArray.push(new Particle());
+        }
+      }
+
+      function connect() {
+        for (let a = 0; a < particlesArray.length; a++) {
+          for (let b = a; b < particlesArray.length; b++) {
+            let distance =
+              (particlesArray[a].x - particlesArray[b].x) *
+                (particlesArray[a].x - particlesArray[b].x) +
+              (particlesArray[a].y - particlesArray[b].y) *
+                (particlesArray[a].y - particlesArray[b].y);
+            if (distance < (canvas.width / 10) * (canvas.height / 10)) {
+              let opacityValue = 1 - distance / 20000;
+              ctx.strokeStyle = `rgba(0, 240, 255, ${opacityValue * 0.2})`;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+              ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < particlesArray.length; i++) {
+          particlesArray[i].update();
+          particlesArray[i].draw();
+        }
+        connect();
+      }
+
+      init();
+      animate();
+    </script>
+  </body>
+</html>
